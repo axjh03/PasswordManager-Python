@@ -1,10 +1,10 @@
 import os
 import json
+import base64
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-import base64
 
 def create_master_password():
     password = input("Enter a master password: ")
@@ -23,20 +23,22 @@ def create_master_password():
 def encrypt_data(key, data):
     cipher = Fernet(key)
     cipher_text = cipher.encrypt(bytes(json.dumps(data), 'utf-8'))
+    cipher_text = base64.b64encode(cipher_text)
     return cipher_text
 
 def decrypt_data(key, data):
+    cipher_text = base64.b64decode(data)
     cipher = Fernet(key)
-    plain_text = json.loads(cipher.decrypt(data).decode())
+    plain_text = json.loads(cipher.decrypt(cipher_text).decode())
     return plain_text
 
 def save_data(data):
-    with open('password_manager.json', 'w') as file:
-        json.dump(data, file)
+    with open('password_manager.json', 'wb') as file:
+        file.write(data)
 
 def load_data():
-    with open('password_manager.json', 'r') as file:
-        data = json.load(file)
+    with open('password_manager.json', 'rb') as file:
+        data = file.read()
     return data
 
 def add_password(key):
